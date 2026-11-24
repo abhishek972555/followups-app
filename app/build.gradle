@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+def runNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+
+android {
+    namespace 'com.ruchit.followups'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.ruchit.followups'
+        minSdk 26
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.0.${runNumber}"
+    }
+
+    // One fixed key, so every new build installs over the old one and keeps your data.
+    signingConfigs {
+        release {
+            storeFile file('followups.keystore')
+            storePassword 'BzVQkDeMygOwL6IWPuf1lHg8'
+            keyAlias 'followups'
+            keyPassword 'BzVQkDeMygOwL6IWPuf1lHg8'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}

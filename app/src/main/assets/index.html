@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f4f1">
+<title>Follow-ups</title>
+<style>
+/* Follow-ups: offline client notebook. Data stays on this phone (browser storage). Use Backup often. */
+:root{color-scheme:light dark;--bg:#f4f4f1;--card:#fff;--ink:#101114;--mute:#6b6d75;--line:#e7e7e2;--acc:#2f4bff;--soft:#eef0ff;--red:#e5384f;--inv:#9fb0ff}
+@media(prefers-color-scheme:dark){:root{--bg:#0d0e11;--card:#17181c;--ink:#f3f3f1;--mute:#9a9ca5;--line:#26272d;--acc:#8a98ff;--soft:#1d2140;--red:#ff6b7d;--inv:#2f4bff}}
+*{box-sizing:border-box;min-width:0;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;overflow-x:clip}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+a{color:inherit;text-decoration:none}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:12px}
+svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{max-width:520px;margin:0 auto;min-height:100vh;padding:calc(env(safe-area-inset-top) + 24px) 18px calc(env(safe-area-inset-bottom) + 110px)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.025em;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px;margin:0 0 18px}
+.ib{width:44px;height:44px;border-radius:14px;background:var(--card);display:grid;place-items:center}
+.search{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:0 14px;color:var(--mute);margin-bottom:14px}
+.search input{flex:1;border:0;background:none;min-height:50px;font-size:16px;color:var(--ink);outline:none}
+.stack{display:flex;flex-direction:column;gap:8px}
+.card{width:100%;display:flex;align-items:center;gap:12px;background:var(--card);border-radius:20px;padding:12px 14px 12px 12px;text-align:left;transition:transform .12s}
+.card:active{transform:scale(.985)}
+.av{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;flex:none;background:hsl(var(--h) 75% 92%);color:hsl(var(--h) 55% 30%)}
+@media(prefers-color-scheme:dark){.av{background:hsl(var(--h) 30% 22%);color:hsl(var(--h) 75% 80%)}}
+.ct{flex:1;display:flex;flex-direction:column}
+.nm{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sm{font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cnt{font-size:12.5px;font-weight:700;padding:5px 10px;border-radius:999px;background:var(--soft);color:var(--acc);white-space:nowrap}
+.cnt.z{background:var(--bg);color:var(--mute)}
+.bell{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--acc);white-space:nowrap}
+.bell.due{color:var(--red)}
+.bell svg{width:14px;height:14px;stroke-width:2.2}
+.clear{background:var(--card);border-radius:22px;padding:32px 20px;text-align:center;color:var(--mute)}
+.clear b{display:block;color:var(--ink);font-size:18px;margin-bottom:4px}
+.warn{background:var(--card);border-radius:16px;padding:12px 14px;font-size:14px;color:var(--red);margin-bottom:14px}
+.warn:empty{display:none}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 18px);height:56px;padding:0 24px 0 18px;border-radius:20px;background:var(--acc);color:#fff;font-weight:700;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(47,75,255,.35);z-index:10}
+.fab svg{stroke-width:2.4}
+.sheet{position:fixed;inset:0;z-index:30;background:var(--bg);overflow-y:auto;transform:translateY(100%);transition:transform .32s cubic-bezier(.2,.8,.2,1);visibility:hidden}
+.sheet.open{transform:none;visibility:visible}
+@media(prefers-reduced-motion:reduce){.sheet,.card{transition:none}}
+.sin{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 12px) 18px calc(env(safe-area-inset-bottom) + 48px)}
+.bar{display:flex;justify-content:space-between;align-items:center;min-height:48px;margin-bottom:10px}
+.saved{font-size:13px;color:var(--mute);font-weight:600}
+.name{width:100%;border:0;background:none;font-size:30px;font-weight:800;letter-spacing:-.025em;line-height:1.15;padding:4px 2px;margin:0 0 14px;outline:none;border-radius:10px}
+.name:focus{background:var(--card)}
+.box{background:var(--card);border-radius:22px;padding:16px;margin-bottom:12px}
+.box h3{font-size:13px;font-weight:700;color:var(--mute);margin:0 0 8px}
+.ta{width:100%;border:0;background:none;resize:vertical;min-height:96px;font-size:16px;line-height:1.5;outline:none;padding:0}
+.ta::placeholder{color:var(--mute)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:24px 4px 10px}
+.sec h2{font-size:17px;font-weight:700;margin:0}
+.sec span{font-size:13px;color:var(--mute)}
+.fu{background:var(--card);border-radius:20px;margin-bottom:8px;overflow:hidden}
+.fh{width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;text-align:left;min-height:60px}
+.num{width:34px;height:34px;border-radius:12px;background:var(--soft);color:var(--acc);display:grid;place-items:center;font-weight:800;font-size:15px;flex:none}
+.fu.open .num{background:var(--acc);color:#fff}
+.ft{flex:1;display:flex;flex-direction:column}
+.ft b{font-size:16px;font-weight:700}
+.ft span{font-size:14px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{color:var(--mute);transition:transform .2s}
+.fu.open .chev{transform:rotate(90deg)}
+.fb{padding:0 16px 14px}
+.fb .ta{min-height:110px;background:var(--bg);border-radius:14px;padding:12px 14px}
+.fr{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.rm{color:var(--mute);font-size:14px;font-weight:600;min-height:40px;padding:0 4px}
+.arm{color:var(--red)!important}
+.done{min-height:40px;padding:0 18px;border-radius:12px;background:var(--ink);color:var(--bg);font-weight:700;font-size:14px}
+.addfu{width:100%;min-height:56px;border-radius:20px;border:1.5px dashed var(--line);color:var(--acc);font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.del{width:100%;min-height:50px;border-radius:16px;color:var(--red);font-weight:700;background:var(--card);margin-top:28px}
+.rem{display:flex;gap:8px;flex-wrap:wrap}
+.rem input{flex:1 1 130px;min-height:48px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-size:16px;outline:none}
+.rset{width:100%;min-height:50px;border-radius:14px;background:var(--acc);color:#fff;font-weight:700;margin-top:10px}
+.ron{display:flex;align-items:center;gap:12px}
+.ron .bi{width:44px;height:44px;border-radius:14px;background:var(--soft);color:var(--acc);display:grid;place-items:center;flex:none}
+.ron.past .bi{background:var(--bg);color:var(--red)}
+.ron b{display:block;font-size:19px;font-weight:800}
+.ron small{color:var(--mute);font-size:13px}
+.rbtns{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.rbtns a,.rbtns button{flex:1 1 40%;min-height:44px;border-radius:12px;background:var(--bg);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 10px}
+.rbtns .pri{background:var(--acc);color:#fff}
+.hint{font-size:13px;color:var(--mute);margin:10px 0 0}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.35);display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.mbox{background:var(--card);width:min(520px,100%);border-radius:26px 26px 0 0;padding:22px 18px calc(env(safe-area-inset-bottom) + 22px)}
+.mbox h2{margin:0 0 12px;font-size:20px;font-weight:800}
+.mbox p{color:var(--mute);font-size:14px;margin:0 0 14px}
+.f{width:100%;min-height:52px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-size:16px;outline:none}
+.mact{display:flex;gap:8px;margin-top:12px}
+.mact button,.mact label{flex:1;min-height:52px;border-radius:16px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.go{background:var(--acc);color:#fff}.no{background:var(--bg)}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 88px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:16px;font-size:14px;font-weight:600;display:none;gap:16px;align-items:center;z-index:60;width:max-content;max-width:calc(100% - 36px)}
+.toast.show{display:flex}
+.toast button{color:var(--inv);font-weight:800}
+</style></head><body>
+
+<div class="app">
+ <div class="top"><div><h1>Clients</h1><p class="sub" id="sub"> </p></div>
+ <button class="ib" id="menuBtn" type="button" aria-label="Backup and restore"><svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></button></div>
+ <div class="warn" id="warn"></div>
+ <label class="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input id="q" type="search" placeholder="Search clients or updates" aria-label="Search"></label>
+ <div id="list"></div>
+</div>
+<button class="fab" id="fab" type="button"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New lead</button>
+
+<section class="sheet" id="sheet" aria-label="Client"><div class="sin" id="sin"></div></section>
+
+<div class="modal" id="modal"><form class="mbox" id="newF"><h2>New lead</h2>
+ <input class="f" id="newName" placeholder="Lead name" autocomplete="off" aria-label="Lead name">
+ <div class="mact"><button class="no" type="button" data-close>Cancel</button><button class="go" type="submit">Create</button></div></form></div>
+
+<div class="modal" id="menu"><div class="mbox"><h2>Backup</h2>
+ <p>Your clients are saved only on this phone. Save a backup file now and then, so you can restore it if the browser is cleared or you change phones.</p>
+ <div class="mact"><button class="go" type="button" id="bk">Save backup</button><label class="no" for="rs">Restore</label></div>
+ <input type="file" id="rs" accept=".json,application/json" hidden>
+ <div class="mact"><button class="no" type="button" data-close>Close</button></div></div></div>
+
+<div class="toast" id="toast" role="status"><span id="tmsg"></span><button id="tundo" type="button">Undo</button></div>
+
+<script>
+{
+const SEED=[{"id":"jb8f1ff9zx0o078xo4g6","name":"shruti","about":"ahmededabad cleint \nbusiness \ndemat holding in kotak of 10 lakh ","createdAt":"2026-11-24T12:46:41.822Z","updatedAt":"2026-11-24T12:54:28.991Z","notes":[{"at":"2026-11-24T12:53:11.152Z","text":"heyyy call me in a week "},{"at":"2026-11-24T12:54:20.667Z","text":"call tomotww"}]},{"id":"ot3wzmegb7tgcf34quzq","name":"shivam maske","about":"tata\n6545645645\nabhisherdsferk.brahmbhatt.ab@gmail.com","createdAt":"2026-11-24T12:17:20.486Z","updatedAt":"2026-11-24T12:17:20.487Z","notes":[]}];
+const KEY='followups.v1';
+const NATIVE=typeof window.Android==='object'&&window.Android!==null&&typeof window.Android.syncReminders==='function';
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const pad=n=>String(n).padStart(2,'0');
+const stamp=iso=>{const d=new Date(iso);if(isNaN(d))return '';let h=d.getHours(),ap=h<12?'am':'pm';h=h%12||12;return d.getDate()+' '+MON[d.getMonth()]+(d.getFullYear()!==new Date().getFullYear()?' '+d.getFullYear():'')+', '+h+':'+pad(d.getMinutes())+' '+ap};
+const initials=n=>String(n||'?').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+const hue=n=>{let h=0;for(const c of String(n||''))h=(h*31+c.charCodeAt(0))%360;return h};
+const fus=it=>Array.isArray(it.notes)?it.notes.filter(x=>x&&typeof x==='object'):[];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const chev='<svg class="chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>';
+const bellI='<svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15zM10 20.5a2 2 0 0 0 4 0"/></svg>';
+const remDate=r=>{if(!r||typeof r.at!=='string'||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(r.at))return null;const d=new Date(r.at);return isNaN(d)?null:d};
+const fmtRem=d=>{let h=d.getHours(),ap=h<12?'am':'pm';h=h%12||12;return WD[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]+', '+h+':'+pad(d.getMinutes())+' '+ap};
+const shortRem=d=>{let h=d.getHours(),ap=h<12?'am':'pm';h=h%12||12;return d.getDate()+' '+MON[d.getMonth()]+' '+h+':'+pad(d.getMinutes())+ap};
+const localISO=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+const compact=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
+const utcCompact=d=>d.getUTCFullYear()+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+'00Z';
+
+let items=[],q='',cur=null,openIdx=-1,remEdit=false,undoFn=null,tT=null,deb=null,storeOK=true;
+const byId=id=>items.find(x=>x.id===id);
+
+/* ---------- storage ---------- */
+function load(){try{const raw=localStorage.getItem(KEY);if(raw===null){items=JSON.parse(JSON.stringify(SEED));saveAll();return}
+  const v=JSON.parse(raw);items=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'&&typeof x.id==='string'):[]}
+ catch(_){storeOK=false;items=JSON.parse(JSON.stringify(SEED))}}
+function saveAll(){syncNative();try{localStorage.setItem(KEY,JSON.stringify(items));storeOK=true;return true}catch(_){storeOK=false;warnStore();return false}}
+function syncNative(){if(!NATIVE)return;const now=Date.now(),list=[];
+ for(const it of items){const d=remDate(it.reminder);if(!d||d.getTime()<=now)continue;const f=fus(it),last=[...f].reverse().find(x=>String(x.text||'').trim());
+  list.push({id:it.id,at:d.getTime(),title:'Follow up: '+(it.name||'client'),text:last?'Last update: '+String(last.text).trim():String(it.about||'').trim()})}
+ try{Android.syncReminders(JSON.stringify(list))}catch(_){}}
+function warnStore(){$('#warn').textContent=storeOK?'':'This browser is not letting the app save. Open the file in Chrome (Android) or Safari, and save a backup before closing.'}
+
+function toast(msg,undo){$('#tmsg').textContent=msg;undoFn=undo||null;$('#tundo').style.display=undo?'':'none';$('#toast').classList.add('show');clearTimeout(tT);tT=setTimeout(()=>{$('#toast').classList.remove('show');undoFn=null},5000)}
+$('#tundo').addEventListener('click',()=>{const u=undoFn;undoFn=null;$('#toast').classList.remove('show');if(u)u()});
+
+/* ---------- list ---------- */
+function render(){
+ $('#sub').textContent=items.length+(items.length===1?' client':' clients');
+ const s=q.trim().toLowerCase(),now=new Date();
+ const list=items.filter(it=>!s||[it.name,it.about,...fus(it).map(x=>x.text)].join(' ').toLowerCase().includes(s))
+  .sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')));
+ if(!items.length){$('#list').innerHTML='<div class="clear"><b>No clients yet</b>Tap “New lead” to add your first one.</div>';return}
+ if(!list.length){$('#list').innerHTML='<div class="clear"><b>No matches</b>Try another name or word.</div>';return}
+ $('#list').innerHTML='<div class="stack">'+list.map(it=>{const f=fus(it),last=f[f.length-1];
+  const sub=last&&last.text?'Follow-up '+f.length+': '+last.text:(it.about||'No follow-ups yet');
+  const rd=remDate(it.reminder);const bell=rd?`<span class="bell ${rd<=now?'due':''}">${bellI}${rd<=now?'Due · ':''}${esc(shortRem(rd))}</span>`:'';
+  return `<button class="card" type="button" data-id="${esc(it.id)}"><span class="av" style="--h:${hue(it.name)}">${esc(initials(it.name))}</span>
+  <span class="ct"><span class="nm">${esc(it.name||'Untitled')}</span>${bell}<span class="sm">${esc(sub)}</span></span>
+  <span class="cnt ${f.length?'':'z'}">${f.length}</span></button>`}).join('')+'</div>'}
+$('#list').addEventListener('click',e=>{const c=e.target.closest('.card');if(c)openClient(c.dataset.id)});
+$('#q').addEventListener('input',e=>{q=e.target.value;render()});
+
+/* ---------- saving ---------- */
+function persist(){if(!cur)return;clearTimeout(deb);deb=null;cur.updatedAt=new Date().toISOString();
+ const copy=JSON.parse(JSON.stringify(cur)),i=items.findIndex(x=>x.id===cur.id);if(i>=0)items[i]=copy;else items.unshift(copy);
+ setSaved(saveAll()?'Saved':'Not saved');render()}
+const later=()=>{setSaved('Editing…');clearTimeout(deb);deb=setTimeout(persist,600)};
+const flush=()=>{if(deb)persist()};
+function setSaved(t){const s=$('#saved');if(s)s.textContent=t}
+window.addEventListener('pagehide',flush);document.addEventListener('visibilitychange',()=>{if(document.hidden)flush()});
+
+/* ---------- client page ---------- */
+function show(){$('#sheet').classList.add('open');$('#sheet').scrollTop=0;document.body.style.overflow='hidden'}
+function openClient(id){const it=byId(id);if(!it)return;cur=JSON.parse(JSON.stringify(it));cur.notes=fus(cur);openIdx=-1;remEdit=false;draw();show()}
+function closeClient(){flush();if(cur&&openIdx>=0)dropEmpty();$('#sheet').classList.remove('open');document.body.style.overflow='';cur=null;openIdx=-1}
+function dropEmpty(){const f=cur.notes[openIdx];if(f&&!String(f.text||'').trim()){cur.notes.splice(openIdx,1);persist()}}
+function fuHtml(f,i){const open=i===openIdx,txt=String(f.text||'').trim();
+ return `<div class="fu ${open?'open':''}"><button class="fh" type="button" data-t="${i}"><span class="num">${i+1}</span>
+ <span class="ft"><b>Follow-up ${i+1}</b><span>${open?esc(stamp(f.at)):esc(txt?txt:'Tap to write the update')}</span></span>${chev}</button>
+ ${open?`<div class="fb"><textarea class="ta" data-fi="${i}" placeholder="What was the update on this follow-up?" aria-label="Follow-up ${i+1} update">${esc(f.text||'')}</textarea>
+ <div class="fr"><button class="rm" type="button" data-rm="${i}">Delete</button><button class="done" type="button" data-done>Done</button></div></div>`:''}</div>`}
+function drawFus(){const w=$('#fus');if(!w)return;w.innerHTML=cur.notes.map(fuHtml).join('');$('#fuCount').textContent=cur.notes.length;const b=$('#sin [data-a=add] span');if(b)b.textContent='Add follow-up '+(cur.notes.length+1)}
+function draw(){$('#sin').innerHTML=`<div class="bar"><button class="ib" type="button" data-a="close" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><span class="saved" id="saved"></span></div>
+ <input class="name" id="cname" value="${esc(cur.name||'')}" placeholder="Client name" aria-label="Client name" autocomplete="off">
+ <div class="box"><h3>Client details</h3><textarea class="ta" id="cabout" placeholder="Phone, company, what they need, budget, anything useful">${esc(cur.about||'')}</textarea></div>
+ <div class="box" id="remBox"></div>
+ <div class="sec"><h2>Follow-ups</h2><span id="fuCount"></span></div><div id="fus"></div>
+ <button class="addfu" type="button" data-a="add"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span></span></button>
+ <button class="del" type="button" data-a="delete">Delete client</button>`;drawFus();drawRem()}
+function focusFu(){setTimeout(()=>{const t=$('#sin textarea[data-fi]');if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length);t.scrollIntoView({block:'center',behavior:'smooth'})}},60)}
+
+/* ---------- reminder: calendar file with an alert at the exact time ---------- */
+function drawRem(){const B=$('#remBox');if(!B||!cur)return;const d=remDate(cur.reminder);
+ if(d&&!remEdit){const past=d<=new Date();
+  if(NATIVE){let off=false;try{off=!Android.notificationsAllowed()}catch(_){}
+   B.innerHTML=`<h3>Reminder</h3><div class="ron ${past?'past':''}"><span class="bi">${bellI}</span><span><b>${esc(fmtRem(d))}</b><small>${past?'Due now: time to follow up':'You’ll get a notification at this exact time'}</small></span></div>
+   <div class="rbtns"><button type="button" data-r="change">${past?'Set new':'Change'}</button><button type="button" data-r="remove">Remove</button></div>${off&&!past?'<p class="hint" style="color:var(--red)">Notifications are off for this app. <button type="button" data-r="notif" style="color:var(--acc);font-weight:700">Turn on</button></p>':''}`;return}
+  B.innerHTML=`<h3>Reminder</h3><div class="ron ${past?'past':''}"><span class="bi">${bellI}</span><span><b>${esc(fmtRem(d))}</b><small>${past?'Due now: time to follow up':'Saved. Add it to your calendar to get the alert.'}</small></span></div>
+  <div class="rbtns"><button class="pri" type="button" data-r="ics">Add to calendar</button><a href="${esc(gcal(d))}" target="_blank" rel="noopener">Google Calendar</a><button type="button" data-r="change">${past?'Set new':'Change'}</button><button type="button" data-r="remove">Remove</button></div>
+  <p class="hint">“Add to calendar” saves a file with an alert at the exact minute. Open it and tap Add or Import.</p>`;return}
+ const base=d&&d>new Date()?d:(()=>{const t=new Date();t.setDate(t.getDate()+1);t.setHours(10,0,0,0);return t})(),iso=localISO(base);
+ B.innerHTML=`<h3>Reminder</h3><div class="rem"><input type="date" id="rd" aria-label="Reminder date" value="${iso.slice(0,10)}"><input type="time" id="rt" aria-label="Reminder time" value="${iso.slice(11,16)}"></div>
+ <button class="rset" type="button" data-r="set">${d?'Update reminder':'Set reminder'}</button>${d?'<div class="rbtns"><button type="button" data-r="cancel">Cancel</button></div>':''}<p class="hint" id="rmsg"></p>`}
+function remText(){const f=fus(cur),last=[...f].reverse().find(x=>String(x.text||'').trim());
+ return [cur.about?'Client details:\n'+cur.about.trim():'',last?'Last follow-up ('+(f.indexOf(last)+1)+'):\n'+last.text.trim():''].filter(Boolean).join('\n\n')}
+function gcal(d){const e=new Date(d.getTime()+15*60000);const tz=(()=>{try{return Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(_){return ''}})();
+ return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Follow up: '+(cur.name||'client'))+'&dates='+compact(d)+'/'+compact(e)+(tz?'&ctz='+encodeURIComponent(tz):'')+'&details='+encodeURIComponent(remText())}
+const icsEsc=s=>String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\r?\n/g,'\\n');
+function fold(l){const out=[];while(l.length>70){out.push(l.slice(0,70));l=' '+l.slice(70)}out.push(l);return out.join('\r\n')}
+function downloadIcs(d){const e=new Date(d.getTime()+15*60000),title='Follow up: '+(cur.name||'client');
+ const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Follow-ups//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+cur.id+'-'+d.getTime()+'@followups','DTSTAMP:'+utcCompact(new Date()),'DTSTART:'+utcCompact(d),'DTEND:'+utcCompact(e),'SUMMARY:'+icsEsc(title),'DESCRIPTION:'+icsEsc(remText()),'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+icsEsc(title),'TRIGGER:-PT0M','END:VALARM','END:VEVENT','END:VCALENDAR'].map(fold).join('\r\n');
+ const safe=String(cur.name||'client').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'client';
+ const blob=new Blob([L],{type:'text/calendar'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Follow-up-'+safe+'.ics';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+
+/* ---------- client page events ---------- */
+$('#sin').addEventListener('input',e=>{if(!cur)return;const t=e.target;
+ if(t.id==='cname'){cur.name=t.value;later()}else if(t.id==='cabout'){cur.about=t.value;later()}
+ else if(t.dataset.fi!==undefined){const f=cur.notes[+t.dataset.fi];if(f){f.text=t.value;later()}}});
+$('#sin').addEventListener('focusout',e=>{if(e.target.matches('#cname,#cabout,textarea[data-fi]'))flush()});
+const arm=(b,txt,back)=>{if(b.classList.contains('arm'))return true;b.classList.add('arm');b.textContent=txt;setTimeout(()=>{if(b.isConnected){b.classList.remove('arm');b.textContent=back}},3000);return false};
+$('#sin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||!cur)return;const a=b.dataset.a,r=b.dataset.r;
+ if(a==='close'){closeClient();return}
+ if(r==='set'){const dv=$('#rd').value,tv=$('#rt').value,d=new Date(dv+'T'+tv);
+  if(!dv||!tv||isNaN(d)){$('#rmsg').textContent='Pick a date and a time.';return}
+  if(d<=new Date()){$('#rmsg').textContent='That time has already passed.';return}
+  flush();cur.reminder={at:dv+'T'+tv};remEdit=false;if(NATIVE){try{Android.ensureNotifications()}catch(_){}}persist();drawRem();toast('Reminder set · '+shortRem(d));return}
+ if(r==='notif'){try{Android.openNotificationSettings()}catch(_){}return}
+ if(r==='ics'){const d=remDate(cur.reminder);if(d)downloadIcs(d);return}
+ if(r==='change'){remEdit=true;drawRem();return}
+ if(r==='cancel'){remEdit=false;drawRem();return}
+ if(r==='remove'){if(!arm(b,'Tap again','Remove'))return;cur.reminder=null;persist();drawRem();toast(NATIVE?'Reminder removed':'Reminder removed here. Delete the calendar event too if you added one.');return}
+ if(a==='add'){flush();if(openIdx>=0)dropEmpty();cur.notes.push({at:new Date().toISOString(),text:''});openIdx=cur.notes.length-1;drawFus();focusFu();return}
+ if(b.dataset.t!==undefined){const i=+b.dataset.t;flush();
+  if(openIdx>=0&&openIdx!==i){const was=openIdx,f=cur.notes[was];if(f&&!String(f.text||'').trim()){cur.notes.splice(was,1);persist();openIdx=i>was?i-1:i}else openIdx=i}else openIdx=openIdx===i?-1:i;
+  drawFus();if(openIdx>=0)focusFu();return}
+ if(b.dataset.done!==undefined){flush();dropEmpty();openIdx=-1;drawFus();return}
+ if(b.dataset.rm!==undefined){if(!arm(b,'Tap again to delete','Delete'))return;const i=+b.dataset.rm,old=cur.notes[i],id=cur.id;cur.notes.splice(i,1);openIdx=-1;persist();drawFus();
+  toast('Follow-up deleted',()=>{if(cur&&cur.id===id){cur.notes.splice(i,0,old);persist();drawFus()}});return}
+ if(a==='delete'){if(!arm(b,'Tap again to delete client','Delete client'))return;clearTimeout(deb);deb=null;const copy=JSON.parse(JSON.stringify(cur)),i=items.findIndex(x=>x.id===cur.id);
+  if(i>=0)items.splice(i,1);saveAll();$('#sheet').classList.remove('open');document.body.style.overflow='';cur=null;openIdx=-1;render();
+  toast('Deleted '+(copy.name||'client'),()=>{items.splice(Math.max(0,i),0,copy);saveAll();render()})}});
+
+/* ---------- new lead, backup ---------- */
+document.querySelectorAll('.modal').forEach(m=>m.addEventListener('click',e=>{if(e.target===m||e.target.closest('[data-close]'))m.classList.remove('open')}));
+document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;const m=document.querySelector('.modal.open');if(m)m.classList.remove('open');else if(cur)closeClient()});
+$('#fab').addEventListener('click',()=>{$('#newName').value='';$('#modal').classList.add('open');setTimeout(()=>$('#newName').focus(),50)});
+$('#newF').addEventListener('submit',e=>{e.preventDefault();const name=$('#newName').value.trim();if(!name)return;$('#modal').classList.remove('open');
+ const now=new Date().toISOString();cur={id:uid(),name,about:'',notes:[],createdAt:now,updatedAt:now};openIdx=-1;remEdit=false;persist();draw();show();setTimeout(()=>{const t=$('#cabout');if(t)t.focus()},360)});
+$('#menuBtn').addEventListener('click',()=>{flush();$('#menu').classList.add('open')});
+$('#bk').addEventListener('click',()=>{const d=new Date(),json=JSON.stringify({app:'followups',version:1,savedAt:d.toISOString(),clients:items},null,1),fname='followups-backup-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';
+ if(NATIVE){try{Android.saveBackup(json,fname)}catch(_){toast('Could not save the backup')}return}
+ const blob=new Blob([json],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='followups-backup-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Backup saved to your downloads')});
+$('#rs').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
+ try{const v=JSON.parse(await f.text()),list=Array.isArray(v)?v:v&&Array.isArray(v.clients)?v.clients:null;if(!list)throw 0;
+  const clean=list.filter(x=>x&&typeof x==='object'&&typeof x.name==='string').map(x=>({...x,id:typeof x.id==='string'?x.id:uid(),notes:fus(x)}));
+  const before=JSON.parse(JSON.stringify(items));const map=new Map(items.map(x=>[x.id,x]));for(const c of clean)map.set(c.id,c);items=[...map.values()];saveAll();render();$('#menu').classList.remove('open');
+  toast('Restored '+clean.length+' clients',()=>{items=before;saveAll();render()})}
+ catch(_){toast('That file is not a Follow-ups backup')}});
+
+window.appBack=()=>{const m=document.querySelector('.modal.open');if(m){m.classList.remove('open');return true}if(cur){closeClient();return true}return false};
+window.nativeToast=m=>toast(String(m));
+window.openFromNotification=id=>{document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));if(!byId(id))return;if(cur)closeClient();openClient(id)};
+load();warnStore();render();syncNative();
+setInterval(()=>{if(!cur)render()},60000);
+}
+</script>
+</body></html>
