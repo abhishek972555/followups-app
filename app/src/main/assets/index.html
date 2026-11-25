@@ -114,7 +114,7 @@ h1{font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.025em;margin
  <div class="mact"><button class="no" type="button" data-close>Cancel</button><button class="go" type="submit">Create</button></div></form></div>
 
 <div class="modal" id="menu"><div class="mbox"><h2>Backup</h2>
- <p>Your clients are saved only on this phone. Save a backup file now and then, so you can restore it if the browser is cleared or you change phones.</p>
+ <p id="bkText">Your clients are saved only on this phone. Save a backup file now and then, so you can restore it if you reinstall the app or change phones.</p>
  <div class="mact"><button class="go" type="button" id="bk">Save backup</button><label class="no" for="rs">Restore</label></div>
  <input type="file" id="rs" accept=".json,application/json" hidden>
  <div class="mact"><button class="no" type="button" data-close>Close</button></div></div></div>
@@ -125,7 +125,7 @@ h1{font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.025em;margin
 {
 const SEED=[{"id":"jb8f1ff9zx0o078xo4g6","name":"shruti","about":"ahmededabad cleint \nbusiness \ndemat holding in kotak of 10 lakh ","createdAt":"2026-11-24T12:46:41.822Z","updatedAt":"2026-11-24T12:54:28.991Z","notes":[{"at":"2026-11-24T12:53:11.152Z","text":"heyyy call me in a week "},{"at":"2026-11-24T12:54:20.667Z","text":"call tomotww"}]},{"id":"ot3wzmegb7tgcf34quzq","name":"shivam maske","about":"tata\n6545645645\nabhisherdsferk.brahmbhatt.ab@gmail.com","createdAt":"2026-11-24T12:17:20.486Z","updatedAt":"2026-11-24T12:17:20.487Z","notes":[]}];
 const KEY='followups.v1';
-const NATIVE=typeof window.Android==='object'&&window.Android!==null&&typeof window.Android.syncReminders==='function';
+const NATIVE=typeof window.AndroidApp==='object'&&!!window.AndroidApp;
 const $=s=>document.querySelector(s);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -151,12 +151,11 @@ const byId=id=>items.find(x=>x.id===id);
 function load(){try{const raw=localStorage.getItem(KEY);if(raw===null){items=JSON.parse(JSON.stringify(SEED));saveAll();return}
   const v=JSON.parse(raw);items=Array.isArray(v)?v.filter(x=>x&&typeof x==='object'&&typeof x.id==='string'):[]}
  catch(_){storeOK=false;items=JSON.parse(JSON.stringify(SEED))}}
-function saveAll(){syncNative();try{localStorage.setItem(KEY,JSON.stringify(items));storeOK=true;return true}catch(_){storeOK=false;warnStore();return false}}
-function syncNative(){if(!NATIVE)return;const now=Date.now(),list=[];
- for(const it of items){const d=remDate(it.reminder);if(!d||d.getTime()<=now)continue;const f=fus(it),last=[...f].reverse().find(x=>String(x.text||'').trim());
-  list.push({id:it.id,at:d.getTime(),title:'Follow up: '+(it.name||'client'),text:last?'Last update: '+String(last.text).trim():String(it.about||'').trim()})}
- try{Android.syncReminders(JSON.stringify(list))}catch(_){}}
-function warnStore(){$('#warn').textContent=storeOK?'':'This browser is not letting the app save. Open the file in Chrome (Android) or Safari, and save a backup before closing.'}
+function saveAll(){let ok=true;try{localStorage.setItem(KEY,JSON.stringify(items));storeOK=true}catch(_){storeOK=false;warnStore();ok=false}syncNative();return ok}
+function bodyFor(it){const f=fus(it),last=[...f].reverse().find(x=>String(x.text||'').trim());if(last)return 'Last follow-up: '+String(last.text).trim().slice(0,240);const a=String(it.about||'').trim();return a?a.slice(0,240):'Time to follow up'}
+function syncNative(){if(!NATIVE)return;const now=Date.now(),list=[];for(const it of items){const d=remDate(it.reminder);if(d&&d.getTime()>now)list.push({id:it.id,at:d.getTime(),title:'Follow up: '+(it.name||'client'),body:bodyFor(it)})}try{AndroidApp.syncReminders(JSON.stringify(list))}catch(_){}}
+const notifOK=()=>{if(!NATIVE)return true;try{return !!AndroidApp.notificationsAllowed()}catch(_){return true}};
+function warnStore(){$('#warn').textContent=storeOK?'':'The app could not save. Restart it and save a backup.'}
 
 function toast(msg,undo){$('#tmsg').textContent=msg;undoFn=undo||null;$('#tundo').style.display=undo?'':'none';$('#toast').classList.add('show');clearTimeout(tT);tT=setTimeout(()=>{$('#toast').classList.remove('show');undoFn=null},5000)}
 $('#tundo').addEventListener('click',()=>{const u=undoFn;undoFn=null;$('#toast').classList.remove('show');if(u)u()});
@@ -210,9 +209,9 @@ function focusFu(){setTimeout(()=>{const t=$('#sin textarea[data-fi]');if(t){t.f
 /* ---------- reminder: calendar file with an alert at the exact time ---------- */
 function drawRem(){const B=$('#remBox');if(!B||!cur)return;const d=remDate(cur.reminder);
  if(d&&!remEdit){const past=d<=new Date();
-  if(NATIVE){let off=false;try{off=!Android.notificationsAllowed()}catch(_){}
-   B.innerHTML=`<h3>Reminder</h3><div class="ron ${past?'past':''}"><span class="bi">${bellI}</span><span><b>${esc(fmtRem(d))}</b><small>${past?'Due now: time to follow up':'You’ll get a notification at this exact time'}</small></span></div>
-   <div class="rbtns"><button type="button" data-r="change">${past?'Set new':'Change'}</button><button type="button" data-r="remove">Remove</button></div>${off&&!past?'<p class="hint" style="color:var(--red)">Notifications are off for this app. <button type="button" data-r="notif" style="color:var(--acc);font-weight:700">Turn on</button></p>':''}`;return}
+  if(NATIVE){const ok=notifOK();B.innerHTML=`<h3>Reminder</h3><div class="ron ${past?'past':''}"><span class="bi">${bellI}</span><span><b>${esc(fmtRem(d))}</b><small>${past?'Due now: time to follow up':'You’ll get a notification at this time'}</small></span></div>
+  <div class="rbtns"><button type="button" data-r="change">${past?'Set new':'Change'}</button><button type="button" data-r="remove">Remove</button></div>
+  ${!past&&!ok?'<p class="hint" style="color:var(--red)">Notifications are off for Follow-ups, so this alert won’t show. <button type="button" data-r="nset" style="color:var(--acc);font-weight:700">Turn on</button></p>':''}`;return}
   B.innerHTML=`<h3>Reminder</h3><div class="ron ${past?'past':''}"><span class="bi">${bellI}</span><span><b>${esc(fmtRem(d))}</b><small>${past?'Due now: time to follow up':'Saved. Add it to your calendar to get the alert.'}</small></span></div>
   <div class="rbtns"><button class="pri" type="button" data-r="ics">Add to calendar</button><a href="${esc(gcal(d))}" target="_blank" rel="noopener">Google Calendar</a><button type="button" data-r="change">${past?'Set new':'Change'}</button><button type="button" data-r="remove">Remove</button></div>
   <p class="hint">“Add to calendar” saves a file with an alert at the exact minute. Open it and tap Add or Import.</p>`;return}
@@ -241,8 +240,8 @@ $('#sin').addEventListener('click',e=>{const b=e.target.closest('button');if(!b|
  if(r==='set'){const dv=$('#rd').value,tv=$('#rt').value,d=new Date(dv+'T'+tv);
   if(!dv||!tv||isNaN(d)){$('#rmsg').textContent='Pick a date and a time.';return}
   if(d<=new Date()){$('#rmsg').textContent='That time has already passed.';return}
-  flush();cur.reminder={at:dv+'T'+tv};remEdit=false;if(NATIVE){try{Android.ensureNotifications()}catch(_){}}persist();drawRem();toast('Reminder set · '+shortRem(d));return}
- if(r==='notif'){try{Android.openNotificationSettings()}catch(_){}return}
+  flush();cur.reminder={at:dv+'T'+tv};remEdit=false;persist();if(NATIVE){try{AndroidApp.askNotifications()}catch(_){}}drawRem();toast('Reminder set · '+shortRem(d));return}
+ if(r==='nset'){try{AndroidApp.openNotificationSettings()}catch(_){}return}
  if(r==='ics'){const d=remDate(cur.reminder);if(d)downloadIcs(d);return}
  if(r==='change'){remEdit=true;drawRem();return}
  if(r==='cancel'){remEdit=false;drawRem();return}
@@ -265,9 +264,9 @@ $('#fab').addEventListener('click',()=>{$('#newName').value='';$('#modal').class
 $('#newF').addEventListener('submit',e=>{e.preventDefault();const name=$('#newName').value.trim();if(!name)return;$('#modal').classList.remove('open');
  const now=new Date().toISOString();cur={id:uid(),name,about:'',notes:[],createdAt:now,updatedAt:now};openIdx=-1;remEdit=false;persist();draw();show();setTimeout(()=>{const t=$('#cabout');if(t)t.focus()},360)});
 $('#menuBtn').addEventListener('click',()=>{flush();$('#menu').classList.add('open')});
-$('#bk').addEventListener('click',()=>{const d=new Date(),json=JSON.stringify({app:'followups',version:1,savedAt:d.toISOString(),clients:items},null,1),fname='followups-backup-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';
- if(NATIVE){try{Android.saveBackup(json,fname)}catch(_){toast('Could not save the backup')}return}
- const blob=new Blob([json],{type:'application/json'});
+$('#bk').addEventListener('click',()=>{const d=new Date(),txt=JSON.stringify({app:'followups',version:1,savedAt:d.toISOString(),clients:items},null,1),fname='followups-backup-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';
+ if(NATIVE){let ok=false;try{ok=!!AndroidApp.saveFile(fname,'application/json',txt)}catch(_){}toast(ok?'Backup saved to Downloads':'Could not save the backup');return}
+ const blob=new Blob([txt],{type:'application/json'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='followups-backup-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);toast('Backup saved to your downloads')});
 $('#rs').addEventListener('change',async e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(!f)return;
  try{const v=JSON.parse(await f.text()),list=Array.isArray(v)?v:v&&Array.isArray(v.clients)?v.clients:null;if(!list)throw 0;
@@ -276,9 +275,10 @@ $('#rs').addEventListener('change',async e=>{const f=e.target.files&&e.target.fi
   toast('Restored '+clean.length+' clients',()=>{items=before;saveAll();render()})}
  catch(_){toast('That file is not a Follow-ups backup')}});
 
+window.appFlush=()=>{flush()};
 window.appBack=()=>{const m=document.querySelector('.modal.open');if(m){m.classList.remove('open');return true}if(cur){closeClient();return true}return false};
-window.nativeToast=m=>toast(String(m));
-window.openFromNotification=id=>{document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));if(!byId(id))return;if(cur)closeClient();openClient(id)};
+window.openFromNotif=id=>{if(cur&&cur.id===id){drawRem();return}if(cur)closeClient();document.querySelectorAll('.modal.open').forEach(m=>m.classList.remove('open'));setTimeout(()=>{if(byId(id))openClient(id)},cur?350:0)};
+window.onNotifChange=()=>{if(cur&&!remEdit)drawRem()};
 load();warnStore();render();syncNative();
 setInterval(()=>{if(!cur)render()},60000);
 }
